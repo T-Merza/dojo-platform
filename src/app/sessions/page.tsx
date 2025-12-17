@@ -1,66 +1,53 @@
 "use client";
 
 import { useState } from "react";
-
-type TrainingLevel = "Beginner" | "Intermediate" | "Advanced";
-
-type Session = {
-  id: string;
-  game: string;
-  trainingLevel: TrainingLevel;
-  coachName: string;
-  startTime: string;
-  endTime: string;
-  maxStudents: number;
-  enrolledStudents: number;
-};
-
-const sessions: Session[] = [
-  {
-    id: "s1",
-    game: "Naraka: Bladepoint",
-    trainingLevel: "Beginner",
-    coachName: "Coach Alpha",
-    startTime: "2025-01-20 18:00",
-    endTime: "2025-01-20 19:30",
-    maxStudents: 5,
-    enrolledStudents: 2,
-  },
-  {
-    id: "s2",
-    game: "Naraka: Bladepoint",
-    trainingLevel: "Intermediate",
-    coachName: "Coach Beta",
-    startTime: "2025-01-20 20:00",
-    endTime: "2025-01-20 21:30",
-    maxStudents: 4,
-    enrolledStudents: 4,
-  },
-  {
-    id: "s3",
-    game: "Naraka: Bladepoint",
-    trainingLevel: "Advanced",
-    coachName: "Coach Gamma",
-    startTime: "2025-01-21 19:00",
-    endTime: "2025-01-21 20:30",
-    maxStudents: 3,
-    enrolledStudents: 1,
-  },
-];
+import {
+  TrainingLevel,
+  CoachAvailability,
+  Session,
+  generateSessionsFromAvailability,
+} from "@/lib/scheduling";
 
 export default function SessionsPage() {
+  // Filters
   const [selectedGame, setSelectedGame] = useState<string>("All");
   const [selectedLevel, setSelectedLevel] = useState<
     TrainingLevel | "All"
   >("All");
 
+  // Example availability (replace later with DB / API)
+  const availability: CoachAvailability[] = [
+    {
+      coachId: "alpha",
+      coachName: "Coach Alpha",
+      game: "Naraka: Bladepoint",
+      trainingLevels: ["Beginner", "Intermediate"],
+      date: "2025-01-20",
+      startTime: "18:00",
+      endTime: "21:00",
+      maxStudents: 5,
+    },
+    {
+      coachId: "beta",
+      coachName: "Coach Beta",
+      game: "Naraka: Bladepoint",
+      trainingLevels: ["Intermediate", "Advanced"],
+      date: "2025-01-20",
+      startTime: "20:00",
+      endTime: "22:30",
+      maxStudents: 4,
+    },
+  ];
+
+  // Generate sessions from availability
+  const sessions: Session[] = generateSessionsFromAvailability(availability);
+
+  // Apply filters
   const filteredSessions = sessions.filter((session) => {
     const gameMatch =
       selectedGame === "All" || session.game === selectedGame;
-
     const levelMatch =
-      selectedLevel === "All" ||
-      session.trainingLevel === selectedLevel;
+      selectedLevel === "All" || session.trainingLevel === selectedLevel;
 
     return gameMatch && levelMatch;
   });
@@ -132,12 +119,11 @@ export default function SessionsPage() {
                 </p>
 
                 <p className="text-gray-400 text-sm">
-                  {session.startTime} → {session.endTime}
+                  {session.date} {session.startTime} → {session.endTime}
                 </p>
 
                 <p className="text-gray-400 text-sm mt-1">
-                  Spots: {session.enrolledStudents} /{" "}
-                  {session.maxStudents}
+                  Spots: {session.enrolledStudents} / {session.maxStudents}
                 </p>
               </div>
 
