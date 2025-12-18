@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   CoachAvailability,
   TrainingLevel,
+  CoachProfile,
   generateSessionsFromAvailability,
 } from "@/lib/scheduling";
 
@@ -20,6 +21,19 @@ export default function CoachDashboardPage() {
     endTime: "",
     maxStudents: 5,
   });
+
+  const coaches: CoachProfile[] = [
+    {
+        coachId: "alpha",
+        name: "Coach Alpha",
+        approvedGames: [
+        {
+            game: "Naraka: Bladepoint",
+            maxTrainingLevel: "Intermediate",
+        },
+        ],
+    },
+    ];
 
   function toggleLevel(level: TrainingLevel) {
     setForm((prev) => ({
@@ -44,7 +58,7 @@ export default function CoachDashboardPage() {
     }));
   }
 
-  const sessions = generateSessionsFromAvailability(availability);
+  const sessions = generateSessionsFromAvailability(availability, coaches);
 
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12 max-w-5xl mx-auto">

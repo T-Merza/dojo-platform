@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   TrainingLevel,
   CoachAvailability,
+  CoachProfile,
   Session,
   generateSessionsFromAvailability,
 } from "@/lib/scheduling";
@@ -19,9 +20,7 @@ export default function SessionsPage() {
   const availability: CoachAvailability[] = [
     {
       coachId: "alpha",
-      coachName: "Coach Alpha",
       game: "Naraka: Bladepoint",
-      trainingLevels: ["Beginner", "Intermediate"],
       date: "2025-01-20",
       startTime: "18:00",
       endTime: "21:00",
@@ -29,9 +28,7 @@ export default function SessionsPage() {
     },
     {
       coachId: "beta",
-      coachName: "Coach Beta",
       game: "Naraka: Bladepoint",
-      trainingLevels: ["Intermediate", "Advanced"],
       date: "2025-01-20",
       startTime: "20:00",
       endTime: "22:30",
@@ -39,8 +36,21 @@ export default function SessionsPage() {
     },
   ];
 
+  const coaches: CoachProfile[] = [
+  {
+    coachId: "alpha",
+    name: "Coach Alpha",
+    approvedGames: [
+      {
+        game: "Naraka: Bladepoint",
+        maxTrainingLevel: "Intermediate",
+      },
+    ],
+  },
+];
+
   // Generate sessions from availability
-  const sessions: Session[] = generateSessionsFromAvailability(availability);
+  const sessions: Session[] = generateSessionsFromAvailability(availability, coaches);
 
   // Apply filters
   const filteredSessions = sessions.filter((session) => {

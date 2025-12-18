@@ -1,15 +1,37 @@
 export type TrainingLevel = "Beginner" | "Intermediate" | "Advanced";
 
+export type CoachGameApproval = {
+  game: string;
+  maxTrainingLevel: TrainingLevel;
+};
+
+export type CoachProfile = {
+  coachId: string;
+  name: string;
+  approvedGames: CoachGameApproval[];
+};
+
 export type CoachAvailability = {
   coachId: string;
-  coachName: string;
-  game: string;
-  trainingLevels: TrainingLevel[];
-  date: string; // YYYY-MM-DD
-  startTime: string; // HH:MM (24h)
-  endTime: string; // HH:MM (24h)
+  game: string; // must be approved in CoachProfile
+  date: string;
+  startTime: string;
+  endTime: string;
   maxStudents: number;
 };
+
+const trainingLevelOrder: TrainingLevel[] = [
+  "Beginner",
+  "Intermediate",
+  "Advanced",
+];
+
+function getAllowedTrainingLevels(
+  maxLevel: TrainingLevel
+): TrainingLevel[] {
+  const maxIndex = trainingLevelOrder.indexOf(maxLevel);
+  return trainingLevelOrder.slice(0, maxIndex + 1);
+}
 
 export type Session = {
   id: string;
@@ -36,26 +58,37 @@ function addMinutes(time: string, minutes: number): string {
 }
 
 export function generateSessionsFromAvailability(
-  availability: CoachAvailability[]
+  availability: CoachAvailability[],
+  coaches: CoachProfile[]
 ): Session[] {
   const sessions: Session[] = [];
 
   availability.forEach((block) => {
+    const coach = coaches.find(
+      (c) => c.coachId === block.coachId
+    );
+    if (!coach) return;
+
+    const approval = coach.approvedGames.find(
+      (g) => g.game === block.game
+    );
+    if (!approval) return;
+
+    const allowedLevels = getAllowedTrainingLevels(
+      approval.maxTrainingLevel
+    );
+
     let currentTime = block.startTime;
 
     while (true) {
-      const endTime = addMinutes(
-        currentTime,
-        DEFAULT_SESSION_DURATION
-      );
-
+      const endTime = addMinutes(currentTime, DEFAULT_SESSION_DURATION);
       if (endTime > block.endTime) break;
 
-      block.trainingLevels.forEach((level) => {
+      allowedLevels.forEach((level) => {
         sessions.push({
           id: crypto.randomUUID(),
-          coachId: block.coachId,
-          coachName: block.coachName,
+          coachId: coach.coachId,
+          coachName: coach.name,
           game: block.game,
           trainingLevel: level,
           date: block.date,
@@ -73,3 +106,4 @@ export function generateSessionsFromAvailability(
 
   return sessions;
 }
+
