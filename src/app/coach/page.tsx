@@ -3,66 +3,54 @@
 import { useState } from "react";
 import {
   CoachAvailability,
-  TrainingLevel,
   CoachProfile,
   generateSessionsFromAvailability,
 } from "@/lib/scheduling";
 
+const coachProfile: CoachProfile = {
+  coachId: "alpha",
+  name: "Coach Alpha",
+  approvedGames: [
+    {
+      game: "Naraka: Bladepoint",
+      maxTrainingLevel: "Intermediate",
+    },
+  ],
+};
+
 export default function CoachDashboardPage() {
   const [availability, setAvailability] = useState<CoachAvailability[]>([]);
 
-  const [form, setForm] = useState({
-    coachId: "alpha",
-    coachName: "Coach Alpha",
-    game: "Naraka: Bladepoint",
-    trainingLevels: [] as TrainingLevel[],
+  const [form, setForm] = useState<CoachAvailability>({
+    coachId: coachProfile.coachId,
+    game: coachProfile.approvedGames[0].game,
     date: "",
     startTime: "",
     endTime: "",
     maxStudents: 5,
   });
 
-  const coaches: CoachProfile[] = [
-    {
-        coachId: "alpha",
-        name: "Coach Alpha",
-        approvedGames: [
-        {
-            game: "Naraka: Bladepoint",
-            maxTrainingLevel: "Intermediate",
-        },
-        ],
-    },
-    ];
-
-  function toggleLevel(level: TrainingLevel) {
-    setForm((prev) => ({
-      ...prev,
-      trainingLevels: prev.trainingLevels.includes(level)
-        ? prev.trainingLevels.filter((l) => l !== level)
-        : [...prev.trainingLevels, level],
-    }));
-  }
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     setAvailability((prev) => [...prev, form]);
-
     setForm((prev) => ({
       ...prev,
-      trainingLevels: [],
       date: "",
       startTime: "",
       endTime: "",
     }));
   }
 
-  const sessions = generateSessionsFromAvailability(availability, coaches);
+  const sessions = generateSessionsFromAvailability(
+    availability,
+    [coachProfile]
+  );
 
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Coach Availability</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        Coach Availability
+      </h1>
 
       {/* Availability Form */}
       <form
@@ -71,40 +59,32 @@ export default function CoachDashboardPage() {
       >
         <div>
           <label className="block text-sm mb-1">Game</label>
-          <input
+          <select
             value={form.game}
             onChange={(e) =>
               setForm({ ...form, game: e.target.value })
             }
             className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2"
-          />
-        </div>            {/* Game Selection Will Be Admin-Approved in Future Versions */}                                                                                         
-                
-        <div>
-          <label className="block text-sm mb-2">
-            Training Levels
-          </label>
-          <div className="flex gap-4">
-            {["Beginner", "Intermediate", "Advanced"].map(
-              (level) => (
-                <label
-                  key={level}
-                  className="flex items-center gap-2"
-                >
-                  <input
-                    type="checkbox"
-                    checked={form.trainingLevels.includes(
-                      level as TrainingLevel
-                    )}
-                    onChange={() =>
-                      toggleLevel(level as TrainingLevel)
-                    }
-                  />
-                  {level}
-                </label>
-              )
-            )}
-          </div>
+          >
+            {coachProfile.approvedGames.map((approval) => (
+              <option
+                key={approval.game}
+                value={approval.game}
+              >
+                {approval.game}
+              </option>
+            ))}
+          </select>
+
+          <p className="text-xs text-gray-500 mt-1">
+            Approved up to{" "}
+            {
+              coachProfile.approvedGames.find(
+                (g) => g.game === form.game
+              )?.maxTrainingLevel
+            }{" "}
+            level
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -161,8 +141,8 @@ export default function CoachDashboardPage() {
           </label>
           <input
             type="number"
-            value={form.maxStudents}
             min={1}
+            value={form.maxStudents}
             onChange={(e) =>
               setForm({
                 ...form,
@@ -178,7 +158,7 @@ export default function CoachDashboardPage() {
         </button>
       </form>
 
-      {/* Generated Sessions Preview */}
+      {/* Generated Sessions */}
       <h2 className="text-2xl font-semibold mb-4">
         Generated Sessions
       </h2>
