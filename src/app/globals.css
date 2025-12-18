@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #947130;
   --foreground: #171717;
 }
 
@@ -23,4 +23,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.fc .fc-toolbar-title {
+  color: #ffae00; 
+}
+
+/* Calendar header row (Mon, Tue, etc.) */
+.fc .fc-col-header-cell-cushion {
+  color: #ffae00 !important;
 }
