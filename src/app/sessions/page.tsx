@@ -50,6 +50,9 @@ export default function SessionsPage() {
   },
 ];
 
+  // Fake User ID (Temp)
+  const currentUserId = "student-123";
+
   // Generate sessions from availability
   const generatedSessions = generateSessionsFromAvailability(availability, coaches);
   const [sessionState, setSessionState] = useState<Session[]>(generatedSessions);
@@ -68,18 +71,29 @@ export default function SessionsPage() {
   const games = ["All", ...GAMES.map(g => g.name)];
 
   function joinSession(sessionId: string) {
-  setSessionState((prev) =>
-    prev.map((session) =>
-      session.id === sessionId &&
-      session.enrolledStudents < session.maxStudents
-        ? {
-            ...session,
-            enrolledStudents: session.enrolledStudents + 1,
-          }
-        : session
-    )
-  );
-}
+    setSessionState((prev) =>
+      prev.map((session) => {
+        if (session.id !== sessionId) return session;
+
+        if (
+          session.enrolledStudentIds.length >= session.maxStudents ||
+          session.enrolledStudentIds.includes(currentUserId)
+        ) {
+          return session;
+        }
+
+        return {
+          ...session,
+          enrolledStudents: session.enrolledStudentIds.length + 1,
+          enrolledStudentIds: [
+            ...session.enrolledStudentIds,
+            currentUserId,
+          ],
+        };
+      })
+    );
+  }
+
 
 
   return (
@@ -130,7 +144,10 @@ export default function SessionsPage() {
 
         {filteredSessions.map((session) => {
           const isFull =
-            session.enrolledStudents >= session.maxStudents;
+            session.enrolledStudentIds.length >= session.maxStudents;
+
+          // Check If User Joined Already
+          const alreadyJoined = session.enrolledStudentIds.includes(currentUserId);
 
           return (
             <div
@@ -151,21 +168,22 @@ export default function SessionsPage() {
                 </p>
 
                 <p className="text-gray-400 text-sm mt-1">
-                  Spots: {session.enrolledStudents} / {session.maxStudents}
+                  Spots: {session.enrolledStudentIds.length} / {session.maxStudents}
                 </p>
               </div>
 
               <button
-                disabled={isFull}
+                disabled={isFull || alreadyJoined}
                 onClick={() => joinSession(session.id)}
                 className={`px-6 py-3 rounded-lg transition ${
-                  isFull
+                  isFull || alreadyJoined
                     ? "bg-gray-700 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700"
                 }`}
               >
-                {isFull ? "Session Full" : "Join Session"}
+                {alreadyJoined ? "Joined" : isFull ? "Session Full" : "Join Session"}
               </button>
+
 
             </div>
           );

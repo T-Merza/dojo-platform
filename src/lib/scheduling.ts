@@ -1,5 +1,12 @@
 export type TrainingLevel = "Beginner" | "Intermediate" | "Advanced";
 
+export type SessionStatus =
+  | "Open"
+  | "Pending"
+  | "Confirmed"
+  | "Completed"
+  | "Cancelled";
+
 export type CoachGameApproval = {
   game: string;
   maxTrainingLevel: TrainingLevel;
@@ -43,9 +50,14 @@ export type Session = {
   startTime: string;
   endTime: string;
   durationMinutes: number;
+
   maxStudents: number;
-  enrolledStudents: number;
+  enrolledStudentIds: string[];
+
+  minStudents: number;
+  status: SessionStatus;
 };
+
 
 const DEFAULT_SESSION_DURATION = 90;
 
@@ -95,8 +107,11 @@ export function generateSessionsFromAvailability(
           startTime: currentTime,
           endTime,
           durationMinutes: DEFAULT_SESSION_DURATION,
+
           maxStudents: block.maxStudents,
-          enrolledStudents: 0,
+          minStudents: 2,
+          enrolledStudentIds: [],
+          status: "Open",
         });
       });
 
@@ -105,5 +120,31 @@ export function generateSessionsFromAvailability(
   });
 
   return sessions;
+}
+
+export function joinSession(
+  session: Session,
+  userId: string
+): Session {
+  if (session.enrolledStudentIds.includes(userId)) {
+    return session;
+  }
+
+  if (session.enrolledStudentIds.length >= session.maxStudents) {
+    return session;
+  }
+
+  const updatedStudents = [...session.enrolledStudentIds, userId];
+
+  let status = session.status;
+  if (updatedStudents.length >= session.minStudents) {
+    status = "Pending";
+  }
+
+  return {
+    ...session,
+    enrolledStudentIds: updatedStudents,
+    status,
+  };
 }
 
