@@ -8,6 +8,7 @@ import {
   Session,
   generateSessionsFromAvailability,
 } from "@/lib/scheduling";
+import { GAMES } from '@/lib/games';
 
 export default function SessionsPage() {
   // Filters
@@ -50,10 +51,12 @@ export default function SessionsPage() {
 ];
 
   // Generate sessions from availability
-  const sessions: Session[] = generateSessionsFromAvailability(availability, coaches);
+  const generatedSessions = generateSessionsFromAvailability(availability, coaches);
+  const [sessionState, setSessionState] = useState<Session[]>(generatedSessions);
+
 
   // Apply filters
-  const filteredSessions = sessions.filter((session) => {
+  const filteredSessions = sessionState.filter((session) => {
     const gameMatch =
       selectedGame === "All" || session.game === selectedGame;
     const levelMatch =
@@ -62,7 +65,22 @@ export default function SessionsPage() {
     return gameMatch && levelMatch;
   });
 
-  const games = ["All", ...new Set(sessions.map((s) => s.game))];
+  const games = ["All", ...GAMES.map(g => g.name)];
+
+  function joinSession(sessionId: string) {
+  setSessionState((prev) =>
+    prev.map((session) =>
+      session.id === sessionId &&
+      session.enrolledStudents < session.maxStudents
+        ? {
+            ...session,
+            enrolledStudents: session.enrolledStudents + 1,
+          }
+        : session
+    )
+  );
+}
+
 
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12 max-w-5xl mx-auto">
@@ -106,7 +124,7 @@ export default function SessionsPage() {
       <div className="space-y-4">
         {filteredSessions.length === 0 && (
           <p className="text-gray-500">
-            No sessions match your filters.
+            No  match your filters.
           </p>
         )}
 
@@ -139,6 +157,7 @@ export default function SessionsPage() {
 
               <button
                 disabled={isFull}
+                onClick={() => joinSession(session.id)}
                 className={`px-6 py-3 rounded-lg transition ${
                   isFull
                     ? "bg-gray-700 cursor-not-allowed"
@@ -147,6 +166,7 @@ export default function SessionsPage() {
               >
                 {isFull ? "Session Full" : "Join Session"}
               </button>
+
             </div>
           );
         })}
