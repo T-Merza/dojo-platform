@@ -5,6 +5,7 @@ import {
   TrainingLevel,
   CoachAvailability,
   CoachProfile,
+  handleJoin,
   Session,
   generateSessionsFromAvailability,
 } from "@/lib/scheduling";
@@ -70,29 +71,32 @@ export default function SessionsPage() {
 
   const games = ["All", ...GAMES.map(g => g.name)];
 
-  function joinSession(sessionId: string) {
-    setSessionState((prev) =>
-      prev.map((session) => {
-        if (session.id !== sessionId) return session;
+  const handleJoin = (sessionId: string) => {
+  setSessionState((prevSessions) =>
+    prevSessions.map((session) => {
+      if (session.id !== sessionId) return session;
 
-        if (
-          session.enrolledStudentIds.length >= session.maxStudents ||
-          session.enrolledStudentIds.includes(currentUserId)
-        ) {
-          return session;
-        }
+      // Prevent double-join
+      if (session.enrolledStudentIds.includes(currentUserId)) {
+        return session;
+      }
 
-        return {
-          ...session,
-          enrolledStudents: session.enrolledStudentIds.length + 1,
-          enrolledStudentIds: [
-            ...session.enrolledStudentIds,
-            currentUserId,
-          ],
-        };
-      })
-    );
-  }
+      // Prevent overfilling
+      if (session.enrolledStudentIds.length >= session.maxStudents) {
+        return session;
+      }
+
+      return {
+        ...session,
+        enrolledStudentIds: [
+          ...session.enrolledStudentIds,
+          currentUserId,
+        ],
+      };
+    })
+  );
+};
+
 
 
 
@@ -147,7 +151,11 @@ export default function SessionsPage() {
             session.enrolledStudentIds.length >= session.maxStudents;
 
           // Check If User Joined Already
-          const alreadyJoined = session.enrolledStudentIds.includes(currentUserId);
+          const alreadyJoined = 
+            session.enrolledStudentIds.includes(currentUserId);
+
+          const canJoin =
+           session.status === "Open" || session.status === "Pending";
 
           return (
             <div
@@ -171,17 +179,27 @@ export default function SessionsPage() {
                   Spots: {session.enrolledStudentIds.length} / {session.maxStudents}
                 </p>
               </div>
+              
+              <span className="text-xs px-3 py-1 rounded-full bg-gray-800 text-gray-300">
+                Status: {session.status}
+              </span>
 
               <button
-                disabled={isFull || alreadyJoined}
-                onClick={() => joinSession(session.id)}
+                disabled={isFull || alreadyJoined || !canJoin}
+                onClick={() => handleJoin(session.id)}
                 className={`px-6 py-3 rounded-lg transition ${
-                  isFull || alreadyJoined
+                  isFull || alreadyJoined || !canJoin
                     ? "bg-gray-700 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700"
                 }`}
               >
-                {alreadyJoined ? "Joined" : isFull ? "Session Full" : "Join Session"}
+                {alreadyJoined
+                  ? "Joined"
+                  : isFull
+                  ? "Session Full"
+                  : session.status === "Pending"
+                  ? "Join (Pending)"
+                  : "Join Session"}
               </button>
 
 
