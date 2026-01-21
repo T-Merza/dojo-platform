@@ -8,6 +8,7 @@ import {
   handleJoin,
   Session,
   generateSessionsFromAvailability,
+  evaluateSessionStatus,
 } from "@/lib/scheduling";
 import { GAMES } from '@/lib/games';
 
@@ -86,12 +87,25 @@ export default function SessionsPage() {
         return session;
       }
 
+      const updatedSession = {
+        ...session,
+        enrolledStudentIds: [
+          ...session.enrolledStudentIds,
+          currentUserId,
+        ],
+      };
+
       return {
         ...session,
         enrolledStudentIds: [
           ...session.enrolledStudentIds,
           currentUserId,
         ],
+      };
+
+      return {
+        ...updatedSession,
+        status: evaluateSessionStatus(updatedSession),
       };
     })
   );
@@ -157,11 +171,18 @@ export default function SessionsPage() {
           const canJoin =
            session.status === "Open" || session.status === "Pending";
 
+          const statusLabel = session.status;
+
           return (
             <div
               key={session.id}
               className="p-6 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
             >
+
+              <span className="inline-block mb-2 text-xs px-3 py-1 rounded-full bg-gray-800 text-gray-300">
+                Status: {session.status}
+              </span>
+              
               <div>
                 <h2 className="text-xl font-semibold">
                   {session.game} — {session.trainingLevel}
