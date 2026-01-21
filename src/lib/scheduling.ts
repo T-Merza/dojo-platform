@@ -122,7 +122,7 @@ export function generateSessionsFromAvailability(
   return sessions;
 }
 
-export function joinSession(
+export function handleJoin(
   session: Session,
   userId: string
 ): Session {
@@ -146,5 +146,17 @@ export function joinSession(
     enrolledStudentIds: updatedStudents,
     status,
   };
+}
+
+export function evaluateSessionStatus(
+  session: Session
+): SessionStatus {
+  if (session.status === "Cancelled") return "Cancelled";
+
+  const count = session.enrolledStudentIds.length;
+
+  if (count >= session.minStudents) return "Pending";
+
+  return "Open";
 }
 
